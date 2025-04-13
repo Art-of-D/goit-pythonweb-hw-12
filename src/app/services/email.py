@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from typing import Literal
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from fastapi_mail.errors import ConnectionErrors
 from pydantic import EmailStr
@@ -22,49 +22,36 @@ conf = ConnectionConfig(
 )
 
 
-async def send_email(email: EmailStr, username: str, host: str):
-    """
-    Send an email to the user to confirm their email address.
-
-    Args:
-        email (EmailStr): The email address of the user.
-        username (str): The username of the user.
-        host (str): The host URL.
-
-    Raises:
-        ConnectionErrors: If there is an error connecting to the email server.
-    """
+async def send_email(
+    email: EmailStr,
+    username: str,
+    host: str,
+    type: Literal["confirmation", "reset"] = "confirmation"
+):
     try:
-        """
-        Create a token for email verification.
-        """
-        token_verification = create_email_token({"sub": email})
+        token = create_email_token({"sub": email})
 
-        """
-        Create a message schema for the email.
-        """
+        if type == "confirmation":
+            subject = "Confirm your email"
+            template_name = "verify_email.html"
+        elif type == "reset":
+            subject="Password reseting"
+            template_name = "reset_password.html"
+        else:
+            raise ValueError("Invalid email type.")
+
         message = MessageSchema(
-            subject="Confirm your email",
+            subject=subject,
             recipients=[email],
             template_body={
                 "host": host,
                 "username": username,
-                "token": token_verification,
+                "token": token,
             },
             subtype=MessageType.html,
         )
 
-        """
-        Create a FastMail instance with the connection configuration.
-        """
         fm = FastMail(conf)
-
-        """
-        Send the email using the FastMail instance.
-        """
-        await fm.send_message(message, template_name="verify_email.html")
+        await fm.send_message(message, template_name=template_name)
     except ConnectionErrors as err:
-        """
-        Print any connection errors that occur.
-        """
-        print(err)
+        print(f"Email send error: {err}")

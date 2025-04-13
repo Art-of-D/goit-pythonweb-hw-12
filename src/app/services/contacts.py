@@ -3,7 +3,7 @@ from sqlalchemy import select, extract, and_
 from datetime import datetime, timedelta, timezone
 
 from app.database.models import Contact
-from app.response.schemas import ContactBase, ContactCreate
+from app.response.schemas import ContactBase, ContactCreate, ContactUpdate
 
 
 class ContactsService:
@@ -98,14 +98,14 @@ class ContactsService:
             raise ValueError(f"Contact with the given ID {id} does not exist.")
         return contact
 
-    async def update_contact(self, user_id: int, id: int, contact: ContactBase):
+    async def update_contact(self, user_id: int, id: int, contact: ContactUpdate):
         """
         Update a contact.
 
         Args:
             user_id (int): The user ID.
             id (int): The contact ID.
-            contact (ContactBase): The updated contact data.
+            contact (ContactUpdate): The updated contact data.
 
         Returns:
             Contact: The updated contact.
@@ -120,6 +120,8 @@ class ContactsService:
 
         if contact.name:
             existing_contact.name = contact.name
+        if contact.surname:
+            existing_contact.surname = contact.surname
         if contact.email:
             existing_contact.email = contact.email
         if contact.phone:

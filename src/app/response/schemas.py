@@ -64,7 +64,20 @@ class ContactCreate(ContactBase):
 
     The ID of the user who owns the contact.
     """
-    
+
+class ContactUpdate(BaseModel):
+    """
+    Contact update model.
+
+    This class represents a contact with basic information.
+    """
+    name: Optional[str] = None
+    surname: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    birthdate: Optional[str] = None
+    notes: Optional[str] = None
+
 class ContactResponse(ContactCreate):
     """
     Contact response model.
@@ -151,8 +164,12 @@ class User(BaseModel):
 
     The avatar of the user.
     """
+    role: str
+    """
+    User role.
 
-
+    The role of the user.
+    """ 
 class UserCreate(BaseModel):
     """
     User creation model.
@@ -179,6 +196,55 @@ class UserCreate(BaseModel):
     User password.
 
     The password of the user.
+    """
+
+    role: Optional[str] = None
+    """
+    User role.
+
+    The role of the user.
+    """
+
+class UserUpdate(BaseModel):
+    """
+    User update model.
+
+    This class represents a user with basic information.
+    """
+
+    name: Optional[str] = None
+    """
+    User name.
+
+    The name of the user.
+    """
+
+    email: Optional[str] = None
+    """
+    User email.
+
+    The email address of the user.
+    """
+
+    password: Optional[str] = None
+    """
+    User password.
+
+    The password of the user.
+    """
+
+    avatar: Optional[str] = None
+    """
+    User avatar.
+
+    The avatar of the user.
+    """
+
+    role: Optional[str] = None
+    """
+    User role.
+
+    The role of the user.
     """
 
 

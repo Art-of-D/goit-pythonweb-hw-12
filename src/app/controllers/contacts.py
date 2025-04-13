@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.contacts import ContactsService
-from app.response.schemas import ContactBase, ContactCreate, ContactResponse
+from app.response.schemas import ContactBase, ContactCreate,ContactUpdate, ContactResponse
 
 
 class ContactsController:
@@ -59,14 +59,14 @@ class ContactsController:
             return None
         return ContactResponse.from_orm(contact)
 
-    async def update_contact(self, user_id: int, id: int, contact: ContactBase) -> ContactResponse:
+    async def update_contact(self, user_id: int, id: int, contact: ContactUpdate) -> ContactResponse:
         """
         Update a contact.
 
         Args:
             user_id (int): The ID of the user.
             id (int): The ID of the contact.
-            contact (ContactBase): The updated contact.
+            contact (ContactUpdate): The updated contact.
 
         Returns:
             ContactResponse: The updated contact.

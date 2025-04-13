@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import User
-from app.response.schemas import UserCreate
+from app.response.schemas import UserCreate, UserUpdate
 from sqlalchemy import select
 
 
@@ -84,9 +84,12 @@ class UserService:
         Args:
             user_id (int): The ID of the user.
         """
-        await self.db.delete(User, user_id)
-        await self.db.commit()
-        return
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar()
+        if user:
+            await self.db.delete(user)
+            await self.db.commit()
+        return user
 
     async def confirm_email(self, email: str):
         """
@@ -98,27 +101,24 @@ class UserService:
         user = await self.get_user_by_email(email)
         user.confirmed = True
         await self.db.commit()
+        await self.db.refresh(user)
+        return user
 
-    async def update_user(self, user_id: int, body: User) -> User:
+    async def update_user(self, user_id: int, updated_user: UserUpdate) -> User:
         """
         Update a user's data.
 
         Args:
             user_id (int): The ID of the user.
-            body (User): The updated user data.
+            updated_user (User): The updated user data.
 
         Returns:
             User: The updated user.
         """
         user = await self.get_user_by_id(user_id)
-        if body.name:
-            user.name = body.name
-        if body.email:
-            user.email = body.email 
-        if body.password:
-            user.password = body.password
-        if body.avatar:
-            user.avatar = body.avatar
+        for var, value in vars(updated_user).items():
+            if value is not None:
+                setattr(user, var, value)
         await self.db.commit()
         await self.db.refresh(user)
         return user

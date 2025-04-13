@@ -1,10 +1,14 @@
-from sqlalchemy import Column, Integer, String, Date, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Boolean, ForeignKey, Enum as SqlEnum
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
 from typing import Optional
+from enum import Enum
 
 Base = declarative_base()
 
+class UserRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
 
 class User(Base):
     """
@@ -63,7 +67,12 @@ class User(Base):
 
     The contacts associated with the user.
     """
+    role = Column(SqlEnum(UserRole), default=UserRole.USER, nullable=False)
+    """
+    User role.
 
+    The role of the user in the system.
+    """
 
 class Contact(Base):
     """

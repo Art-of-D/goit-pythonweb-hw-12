@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
 
 from app.database.db import get_db
-from app.response.schemas import ContactBase, ContactCreate, ContactResponse, ContactListResponse
+from app.response.schemas import ContactBase, ContactCreate, ContactResponse, ContactListResponse, ContactUpdate
 from app.controllers.contacts import ContactsController
 from app.services.current_user import get_current_user
 from app.response.schemas import User
-
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
 """
@@ -37,34 +37,6 @@ async def read_contacts(
     """
     contacts = ContactsController(db)
     return await contacts.get_contacts(current_user.id, skip, limit)
-
-
-@router.get("/{contact_id}", response_model=ContactResponse)
-async def read_contact(
-    contact_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Get a contact by ID.
-
-    This endpoint returns a contact by ID for the current user.
-
-    Args:
-        contact_id (int): The ID of the contact.
-        db (AsyncSession): The database session.
-        current_user (User): The current user.
-
-    Returns:
-        ContactBase: The contact.
-    """
-    contact_controller = ContactsController(db)
-    contact = await contact_controller.get_by_id(user_id=current_user.id, id=contact_id)
-    if contact is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
-        )
-    return contact
 
 
 @router.post("/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED)
@@ -98,8 +70,8 @@ async def create_contact(
 
 
 @router.put("/{contact_id}", response_model=ContactResponse)
-async def update_note(
-    body: ContactBase,
+async def update_contact(
+    body: ContactUpdate,
     contact_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -110,13 +82,13 @@ async def update_note(
     This endpoint updates a contact by ID for the current user.
 
     Args:
-        body (ContactBase): The updated contact data.
+        body (ContactUdate): The updated contact data.
         contact_id (int): The ID of the contact.
         db (AsyncSession): The database session.
         current_user (User): The current user.
 
     Returns:
-        ContactBase: The updated contact.
+        ContactResponse: The updated contact.
     """
     contact_controller = ContactsController(db)
     contact = await contact_controller.update_contact(
@@ -146,7 +118,7 @@ async def remove_conctact(
         current_user (User): The current user.
 
     Returns:
-        ContactBase: The deleted contact.
+        ContactResponse: The deleted contact.
     """
     contact_controller = ContactsController(db)
     contact = await contact_controller.delete_contact(
@@ -160,9 +132,9 @@ async def remove_conctact(
 
 @router.get("/search", response_model=ContactListResponse)
 async def search_contacts(
-    name: str = None,
-    surname: str = None,
-    email: str = None,
+    name: Optional[str] = None,
+    surname: Optional[str] = None,
+    email: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -179,7 +151,7 @@ async def search_contacts(
         current_user (User): The current user.
 
     Returns:
-        List[ContactBase]: The list of matching contacts.
+        List[ContactResponse]: The list of matching contacts.
     """
     contact_controller = ContactsController(db)
     contact = await contact_controller.search_contact(
@@ -202,8 +174,35 @@ async def upcoming_birthdays(
         current_user (User): The current user.
 
     Returns:
-        List[ContactBase]: The list of contacts with upcoming birthdays.
+        List[ContactResponse]: The list of contacts with upcoming birthdays.
     """
     contact_controller = ContactsController(db)
     birthdays = await contact_controller.get_upcoming_birthdays(user_id=current_user.id)
     return birthdays
+
+@router.get("/{contact_id}", response_model=ContactResponse)
+async def read_contact(
+    contact_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get a contact by ID.
+
+    This endpoint returns a contact by ID for the current user.
+
+    Args:
+        contact_id (int): The ID of the contact.
+        db (AsyncSession): The database session.
+        current_user (User): The current user.
+
+    Returns:
+        ContactResponse: The contact.
+    """
+    contact_controller = ContactsController(db)
+    contact = await contact_controller.get_by_id(user_id=current_user.id, id=contact_id)
+    if contact is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
+        )
+    return contact

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.user import UserService
-from app.response.schemas import UserCreate, User
+from app.response.schemas import UserCreate, User, UserUpdate
 
 
 class UserController:
@@ -67,7 +67,7 @@ class UserController:
         user = await self.db.create_user(body, avatar)
         return user
 
-    async def update_user(self, user_id: int, body: User) -> User:
+    async def update_user(self, user_id: int, body: UserUpdate) -> User:
         """
         Update a user.
 
@@ -105,3 +105,15 @@ class UserController:
             None
         """
         return await self.db.confirm_email(email)
+    
+    async def reset_password(self, email: str) -> None:
+        """
+        Reset a user's password.
+
+        Args:
+            email (str): The email of the user.
+
+        Returns:
+            None
+        """
+        return await self.db.reset_password(email)

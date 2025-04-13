@@ -101,10 +101,17 @@ async def register_user(
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this username already exists",
         )
+    if user_data.role != None:
+        user_data.role = user_data.role.upper()
+        if user_data.role not in ["ADMIN", "USER"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Role must be ADMIN or USER",
+            )
     user_data.password = Hash().get_password_hash(user_data.password)
     new_user = await user_service.create_user(user_data)
     background_tasks.add_task(
-        send_email, new_user.email, new_user.name, request.base_url
+        send_email, new_user.email, new_user.name, request.base_url, "confirmation"
     )
     return new_user
 
@@ -136,3 +143,30 @@ async def create_user(request: Request, token: str, db: Session = Depends(get_db
         return {"message": "You have already confirmed your email"}
     await user_controller.confirm_email(email)
     return {"message": "You have successfully confirmed your email"}
+
+
+@router.post("/reset_password", status_code=status.HTTP_201_CREATED)
+async def reset_password(request: Request, background_tasks: BackgroundTasks, email: str, db: Session = Depends(get_db)):
+    """
+    Reset a user's password.
+
+    This endpoint resets a user's password.
+
+    Args:
+        request (Request): The request.
+        email (str): The email of the user.
+        db (Session): The database session.
+
+    Returns:
+        None
+    """
+    user_controller = UserController(db)
+    user = await user_controller.get_user_by_email(email)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User not found"
+        )
+    background_tasks.add_task(
+        send_email, user.email, user.name, request.base_url, "reset"
+    )
+    return {"message": "We`ll send you an email to reset your password"}

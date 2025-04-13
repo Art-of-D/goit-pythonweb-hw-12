@@ -136,6 +136,7 @@ class Settings(BaseSettings):
 
     The configuration for the Pydantic model.
     """
-
+    
 
 settings = Settings()
+
